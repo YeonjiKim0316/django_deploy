@@ -35,8 +35,12 @@
                                         <!-- {% endif %} -->
                                         <!-- &nbsp; -->
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-secondary fw-bold"> {{ user.username }} &nbsp</span>
+                                        <span class="text-secondary fw-bold"> <a href="{% url 'blog:update' %}">{{ user.username }} &nbsp</span>
                                         <a class="btn btn-secondary" href="/accounts/logout/" role="button">로그아웃</a>
+                                        <form action="{% url 'blog:delete' %}" method="POST">
+                                            {% csrf_token %}
+                                            <input type="submit" class="btn btn-secondary" value="회원탈퇴">
+                                        </form>
                                     </div>
                             {% else %}
                                 <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#loginModal">

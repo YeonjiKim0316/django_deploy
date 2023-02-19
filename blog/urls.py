@@ -27,6 +27,8 @@ urlpatterns = [
     path('delete_comment/<int:pk>/', views.delete_comment),
     path('update_comment/<int:pk>/', views.CommentUpdate.as_view()),
     path('<int:pk>/new_comment/', views.new_comment),
-
+    path('logout/', views.logout, name='logout'),
+    path('delete/', views.delete, name='delete'),
+    path('update/', views.update, name='update')
 ]
 

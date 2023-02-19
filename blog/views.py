@@ -7,10 +7,12 @@ from django.core.exceptions import PermissionDenied # 인가 - 권한이 있는 
 from django.utils.text import slugify # 빈칸이나 특수문자로 이루어진 문장을 대시 등을 이용한 한 단어로 이어묶어주는 모듈
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from .forms import CommentForm
-from django.contrib.auth import authenticate, login
+from .forms import CommentForm, CustomUserChangeForm
 
-
+# 회원탈퇴
+from django.views.decorators.http import require_POST
+from django.contrib.auth import logout as auth_logout 
+from django.contrib.auth.decorators import login_required
 # Login 기능 위해 Mixin 추가 
 # Mixin은 객체 지향 프로그램에서 많이 쓰이는 개념으로 간단하게 말하여 다중상속을 가능하게 하는 클래스라고 할 수 있다. 여타의 언어들과는 다르게 파이썬은 다중 상속이 지원되지만 다중상속이 주는 모호함을 피하기 위해 많이 사용한다. 
 # 따라서 Mixin은 상속이라기 보다는 포함, 확장이라는 개념으로 생각할 수 있다.
@@ -284,6 +286,34 @@ class PostSearch(PostList):
         context['search_info'] = f'Search: {q} ({self.get_queryset().count()})'
 
         return context
+
+
+@require_POST
+def delete(request):
+    if request.user.is_authenticated:
+        request.user.delete()
+        auth_logout(request) # session 지우기. 단 탈퇴후 로그아웃순으로 처리. 먼저 로그아웃하면 해당 request 객체 정보가 없어져서 삭제가 안됨.
+        return redirect('blog:home')
+
+@require_POST
+def logout(request) :
+    auth_logout(request)
+    return redirect('blog:home')
+
+
+@login_required
+def update(request) :
+    if request.method == "POST" :
+        form = CustomUserChangeForm(request.POST, instance=request.user)
+        if form.is_valid() :
+            form.save()
+            return redirect('home:blog')
+    else :
+        form = CustomUserChangeForm(instance=request.user)
+    context = {
+        'form' : form,
+    }
+    return render(request, 'account/update.html', context)
 
 # Create your views here.
 # V (view) - 화면에 출력되는 부분을 책임집니다. 
