@@ -1,0 +1,31 @@
+{% extends 'blog/base.html' %}
+{% load crispy_forms_tags %}
+{% block page_area %}
+<p>
+    {# 이 부분을 update_post로 들어오면 수정하기로 변경 #}
+    {% if post %}
+    <h1>글 수정하기 </h1>
+    {% else %}
+    <h1>새 글 작성하기</h1> 
+    {% endif %}
+    <hr/>
+
+    <!-- <table> -->
+    <form method="post" enctype="multipart/form-data"> {% csrf_token %}
+        {{ form|crispy }}
+        
+        <div id="div_id_tags_str">
+            <label for="id_tags_str">Tags</label>
+            <input type="text" name="tags_str" id="id_tags_str" class="textinput textInput form-control" value="{{ tags_str_default }}">
+        </div>
+        <br/>
+
+        {# 완성 후 update_from : urls.py -> views.py -> update_form.html #}
+ 
+
+        <button type="submit" class="btn btn-dark float-right">작성완료</button>
+    </form>
+    {{ form.media }}
+    <!-- </table> -->
+
+{% endblock %}

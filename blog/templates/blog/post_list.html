@@ -1,0 +1,71 @@
+{% extends 'blog/base.html' %}
+{% block page_area %}
+<style>
+    .card img {
+        aspect-ratio: 6/1;
+        object-fit: cover;
+    }
+</style>
+    <br>
+    <div class="d-flex justify-content-between align-items-end">
+            <h1> Blog
+            
+                {% if search_info %}<small class="text-muted">{{ search_info }}</small>{% endif %}
+                {% if category %}<span class="badge badge-secondary">{{ category }}</span>{% endif %}
+                {% if tag %}<span class="badge badge-light">{{ tag }} ({{ tag.post_set.count }})</span>{% endif %}
+            
+            </h1>
+
+            
+            {# 1차 로그인시에만 보이도록 개선 필요#}
+            {% if user.is_authenticated %}
+            {# 그룹 기능 확인 후 - 관리자 및 2차 특정 그룹 유저만 보이도록 개선 #}
+                {% if user.is_superuser or user.is_writer %}
+            <a href="/create_post/" class="btn btn-dark">글쓰기</a> </p>
+                {% endif %}
+            {% endif %}
+        </div>
+    <br>
+    <div class="d-flex justify-content-between">
+        <div class="board">
+        {% for post in posts %}
+        <div class="card" style="width: 60vw;">
+            {% if post.header_img %}
+            <!-- .url : 미디어타입을 url 주소로 변환해서 출력해주는 역할 https:// /media/ ~~~  -->
+            <img src="{{ post.header_img.url }}" class="card-img-top" alt="...">
+            {% endif %}
+
+            <div class="card-body">
+            <!-- <h5 class="card-title">{{ post.title }} </h5> -->
+            <div class="h4 pb-2 mb-4 text-dark border-bottom border-secondary fw-bold">
+                {{ post.title }}
+              </div>
+            {# 이거 걸려면 제목색깔 바꿔야겠죠 #}
+            <!-- <p class="card-text">{{ post.get_content_markdown|safe|truncatewords:20 }} -->
+            <p class="card-text">{{ post.content|truncatewords:20 }}</p>
+            <div class="card-end d-flex justify-content-between align-items-center">
+                {{ post.category }}
+                <p class="card-text d-flex justify-content-end align-items-center">
+                <span class="text-secondary fst-italic"> {{ post.created_at|date:'Y년 M d일 D' }} &nbsp;by {{ post.author }} &nbsp;</span>
+                <a href="{{ post.get_absolute_url }}" class="btn btn-dark">더보기</a> </p>
+            </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {# pagenation #}
+
+        {% if page_obj.has_previous %}
+        <a href="?page={{page_obj.previous_page_number}}">Prev</a>
+        {% endif %}
+        Page {{page_obj.number}} of {{page_obj.paginator.num_pages}}
+        {% if page_obj.has_next %}
+            <a href="?page={{page_obj.next_page_number}}">Next</a>
+        {% endif %}
+        </div>
+
+        <div class="widget">
+        {% include 'blog/search_widget.html' %}
+        </div>
+    </div>
+{% endblock %}

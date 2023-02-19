@@ -1,0 +1,153 @@
+    {% extends 'blog/base.html' %}    
+    {% load crispy_forms_tags %}
+
+    {% block page_area %}
+            <!-- Page Content-->
+            <section class="py-5">
+                <div class="container px-5 my-5">
+                    <div class="row gx-5">
+                        <div class="col-lg-3">
+                            <div class="d-flex align-items-center mt-lg-5 mb-4">
+                                <img class="img-fluid rounded-circle" src="https://picsum.photos/50/50" alt="..." />
+                                <div class="ms-3">
+                                    <div class="fw-bold"> {{ post.author|upper }}</div>
+                                    
+                                    {% if post.category %}
+                                    <div class="text-muted">
+                                        <a href="{{ post.category.get_absolute_url }}" class="">{{ post.category }} {{ post.category_set_count }} </a>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted">미분류</div>
+                                    {% endif %}
+                                </div>
+                                {% if user.is_authenticated and user == post.author %}
+                                {# ms-auto p-2 : flex 자식 컨테이너 일부만 다른 정렬 방식 지정 https://getbootstrap.com/docs/5.3/utilities/flex/#enable-flex-behaviors #}
+                                <a class="btn btn-dark ms-auto p-2" href="/blog/update_post/{{ post.pk }}/" role="button"> 수정 </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-lg-9">
+                            <!-- Post content-->
+                            <article>
+                                <!-- Post header-->
+                                <header class="mb-4">
+                                    <!-- Post title-->
+                                    <h1 class="fw-bolder mb-1">{{ subject }}</h1>
+                                    <!-- Post meta content-->
+                                    <div class="text-muted fst-italic mb-2">{{ post.created_at }}</div>
+                                    <!-- Post categories-->
+                                    <!-- 태그가 있거나 없거나에 따라서 있으면 있는만큼 뱃지가 만들어지고
+                                    없으면 하나도 달려있지 않은 결과가 나오게 될겁니다 -->
+                                    {% if post.tag %}
+                                    {% for ta in post.tag.all %}
+                                    {# {% for ta in post.tag.iterator %} #}
+                                        <a href="{{ ta.get_absolute_url }}" class="">{{ ta }} ({{ ta.post_set.count }})</a>
+                                    {% endfor %}
+                                    {# 이제 create 기능에 tag를 추가하기 위해 views.py -> post_form.html 로 이동합니다 #}
+   
+                                    <br/>
+                                    <br/>
+                                {% endif %}
+                                </header>
+                                <!-- Preview image figure-->
+                                {% if post.header_img %}
+                                <figure class="mb-4">
+                                    <img class="img-fluid rounded" src="{{ post.header_img.url }}" alt="..." /></figure>
+                                {% endif %}
+                                    <!-- Post content-->
+                                <section class="mb-5">
+                                    <!-- <p class="fs-5 mb-4"> {{ post.content }}</p> -->
+                                    <!-- |safe - HTML 이스케이핑 방지 필터, post_list.html도 변경 필요 -->
+                                    <p class="fs-5 mb-4"> {{ post.get_content_markdown|safe }}</p>
+                                    {% if post.file_upload %}
+                                    <a href="{{ post.file_upload.url }}" class="btn btn-dark">다운로드</a>
+                                    {{ post.get_file_extension }}
+                                    
+                                    {% endif %}
+                                </section>
+                            </article>
+
+                        <!-- Comments section-->
+                        <section>
+                            <div class="card bg-light"> 
+                                <div class="card-body" id="comment-area">
+                                <!-- Comments Form -->
+                                <div class="card my-4">
+                                    <h5 class="card-header">댓글</h5>
+                                    <div class="card-body">
+                                        {% if user.is_authenticated %}
+                                            <form id="comment-form" method="POST" action="{{ post.get_absolute_url }}new_comment/">
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    {{ comment_form | crispy }}
+                                                </div>
+                                                <button type="submit" class="btn btn-dark">등록</button>
+                                            </form>
+                                        {% else %}
+                                            <a role="button" class="btn btn-outline-dark btn-block btn-sm" href="#" data-toggle="modal" data-target="#loginModal">Log in and leave a comment</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                        
+                                {% if post.comment_set.exists %}
+                                    {% for comment in post.comment_set.iterator %}
+                                        <!-- Single Comment -->
+                                        <div class="d-flex align-items-center" id="comment-{{ comment.pk }}">
+                                            <img class="d-flex rounded-circle" src="{{ comment.get_avatar_url }}" alt="{{ comment.author }}" width="60px">
+                                            <div class="flex-grow-1 ms-3">
+                                                {% if user.is_authenticated and comment.author == user %}
+                                                    <div class="float-right">
+                                                        <a role="button"
+                                                           class="btn btn-sm btn-secondary"
+                                                           id="comment-{{ comment.pk }}-update-btn"
+                                                           href="/blog/update_comment/{{ comment.pk }}/">
+                                                            수정
+                                                        </a>
+                                                        <a role="button"
+                                                           href="#"
+                                                           id="comment-{{ comment.pk }}-delete-modal-btn"
+                                                           class="btn btn-sm btn-danger"
+                                                           data-bs-toggle="modal" data-bs-target="#deleteCommentModal-{{ comment.pk }}">
+                                                            삭제
+                                                        </a>
+                                                    </div>
+                        
+                                                    <!-- Modal -->
+                                                    <div class="modal fade" id="deleteCommentModal-{{ comment.pk }}" tabindex="-1" role="dialog" aria-labelledby="deleteCommentModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="deleteCommentModalLabel">정말 삭제하나요?</h5>
+                                                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <del>{{ comment | linebreaks }}</del>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                                                    <a role="button" class="btn btn-danger" href="/blog/delete_comment/{{ comment.pk }}/">삭제</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                        
+                                                {% endif %}
+                                                <h5 class="mt-0">
+                                                    {{ comment.author.username }}
+                                                    &nbsp;&nbsp;<small class="text-muted">{{ comment.created_at }}</small>
+                                                </h5>
+                                                <p>{{ comment.content | linebreaks }}</p>
+                                                {% if comment.created_at != comment.modified_at %}
+                                                    <p class="text-muted float-right"><small>Updated: {{ comment.modified_at }}</small></p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+        </main>
+   {% endblock %}
