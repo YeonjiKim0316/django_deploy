@@ -4,8 +4,9 @@ from django.views.generic import ListView # 게시판형으로 데이터를 가�
 from django.views.generic.detail import DetailView
 from django.views.generic import CreateView, UpdateView
 from django.core.exceptions import PermissionDenied # 인가 - 권한이 있는 사용자만
-from django.utils.text import slugify # 빈칸이나 특수문자로 이루어진 문장을 대시 등을 이용한 한 단어로 이어묶어주는 모듈
-from django.db.models import Q
+from django.utils.text import slugify
+ # 빈칸이나 특수문자로 이루어진 문장을 대시 등을 이용한 한 단어로 이어묶어주는 모듈
+from django.db.models import Q # 장고 orm에서 쿼리문처럼 or 조건을 쓰고 싶을때 사용할 수 있다.
 from django.shortcuts import get_object_or_404
 from .forms import CommentForm, CustomUserChangeForm
 
@@ -73,6 +74,7 @@ class PostCreate(LoginRequiredMixin, CreateView):
         else:
                 return redirect('/blog/')
 
+
 # urls -> views -> templates(post_detail.html에 Edit 버튼 추가)
 class PostUpdate(LoginRequiredMixin, UpdateView):
     model = Post
@@ -119,6 +121,7 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
                 self.object.tag.add(tag)
 
         return response
+
 
 class BlogHome(ListView):
     model = Post
@@ -173,6 +176,7 @@ class PostDetail(DetailView):  # post_detail 라고 생긴 template과 model을 
         context['comment_form'] = CommentForm
         return context
 
+
 def category_posts(request, slug):
     if slug == "no_category":
         posts = Post.objects.filter(category=None)
@@ -191,10 +195,10 @@ def category_posts(request, slug):
             # 카테고리 위젯을 잘 완성시키기 위해 만들어야 되는 변수들
             # no_category 글의 개수 세기기 count()
             # Post.objects.filter(category=None)를 호출하도록 urls도 변경해야 할겁니다
-
         }
 
     )
+
 
 def tag_posts(request, slug):
     if slug == "no_tag":
@@ -217,18 +221,19 @@ def tag_posts(request, slug):
     )
 
 
-
 def about_me(request):
     return render(
         request,
         'blog/about.html'
     )
 
+
 def contact(request):
     return render(
         request,
         'blog/contact.html'
     )
+
 
 # 코멘트 기능
 def new_comment(request, pk):
@@ -269,6 +274,7 @@ def delete_comment(request, pk):
     else:
         raise PermissionDenied
 
+
 # 검색창으로 들어온 포스트
 class PostSearch(PostList):
     paginate_by = None
@@ -277,7 +283,7 @@ class PostSearch(PostList):
         q = self.kwargs['q']
         post_list = Post.objects.filter(
             Q(title__contains=q) | Q(tag__tagName__contains=q) | Q(category__categoryName__contains=q)
-        ).distinct()
+        ).distinct() # &를 사용하면 SQL의 where 조건 and 조건이고, |를 사용하면 SQL의 where 조건 or 조건이다.
         return post_list
 
     def get_context_data(self, **kwargs):
